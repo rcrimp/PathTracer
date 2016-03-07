@@ -4,12 +4,13 @@
 #include <GL/glu.h>
 
 const int WINDOW_WIDTH = 640;
-const int WINDOW_HEIGHT = 360;
+const int WINDOW_HEIGHT = 480;
 
 void init();
 void initGL();
 void close();
 void input();
+void handleKey(SDL_Keycode k);
 void render();
 
 SDL_Window *window = NULL;
@@ -18,13 +19,9 @@ GLubyte glBuffer[WINDOW_HEIGHT][WINDOW_WIDTH][3];
 bool quit = false;
 
 int main() {
-   std::cout << "Hello World";
-
    init();
-   
-   render(); // only render one frame
    do {
-//      render();
+      render();
       input();
    } while (!quit);
    
@@ -63,6 +60,8 @@ void input() {
    while (SDL_PollEvent(&e) != 0) {
       if (e.type == SDL_QUIT) {
          quit = true;
+      } else if (e.type == SDL_KEYDOWN) {
+         handleKey(e.key.keysym.sym); 
       }
    }
 }
@@ -86,6 +85,43 @@ Ray cam(Vec(50, 52, 295.6), Vec(0, -0.042612, -1).norm());
 Vec cx = Vec(WINDOW_WIDTH*.5135/WINDOW_HEIGHT);
 Vec cy = (cx%cam.dir).norm()*.5135;
 
+void handleKey(SDL_Keycode k) {
+   switch (k) {
+      case SDLK_DOWN: {
+         cam.origin.y--;
+         break;
+      }
+      case SDLK_UP: {
+         cam.origin.y++;
+         break;
+      }
+      case SDLK_LEFT: {
+         cam.origin.x--;
+         break;
+      }
+      case SDLK_RIGHT: {
+         cam.origin.x++;
+         break;
+      }
+      case SDLK_w: {
+         cam.origin.z--;
+         break;
+      }
+      case SDLK_s: {
+         cam.origin.z++;
+         break;
+      }
+      case SDLK_q: {
+         cam.origin.z-=1e6;
+         break;
+      }
+      case SDLK_a: {
+         cam.origin.z+=1e6;
+         break;
+      }
+   }
+}
+
 inline bool intersect(const Ray &r, double &t, int &id) {
    double d, inf=t=1e20;
    for (int i = numSpheres;i--;) {
@@ -108,7 +144,7 @@ void render() {
          double t;
          int id = 0;
          if (!intersect(r, t, id)) {
-            glBuffer[y][x][0] = 255; // RED
+            glBuffer[y][x][0] = 0; // RED
             glBuffer[y][x][1] = 0; // GREEN
             glBuffer[y][x][2] = 0; // BLUE
          } else {

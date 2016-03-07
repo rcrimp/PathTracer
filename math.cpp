@@ -6,7 +6,8 @@ inline double clamp(double x) {
 }
 
 inline int toInt(double x) {
-   return int(pow(clamp(x), 1/2.2)*255+.5);
+   // return int(pow(clamp(x), 1/2.2)*255+.5);
+   return int(clamp(x)*255);
 }
 
 /* Point, Vector, Color */
