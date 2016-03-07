@@ -67,14 +67,55 @@ void input() {
    }
 }
 
+#include "math.cpp"
+
+/* scene data */
+Sphere spheres[] = {
+   Sphere(1e5, Vec( 1e5+1,40.8,81.6), Vec(),Vec(.75,.25,.25)),//Left
+   Sphere(1e5, Vec(-1e5+99,40.8,81.6),Vec(),Vec(.25,.25,.75)),//Rght
+   Sphere(1e5, Vec(50,40.8, 1e5),     Vec(),Vec(.75,.75,.75)),//Back
+   Sphere(1e5, Vec(50,40.8,-1e5+170), Vec(),Vec()          ),//Frnt
+   Sphere(1e5, Vec(50, 1e5, 81.6),    Vec(),Vec(.75,.75,.75)),//Botm
+   Sphere(1e5, Vec(50,-1e5+81.6,81.6),Vec(),Vec(.75,.75,.75)),//Top
+   Sphere(16.5,Vec(27,16.5,47),       Vec(),Vec(1,1,1)*.999),//Mirr
+   Sphere(16.5,Vec(73,16.5,78),       Vec(),Vec(1,1,1)*.999),//Glas
+   Sphere(1.5, Vec(50,81.6-16.5,81.6),Vec(4,4,4)*100,  Vec()),//Lite
+};
+int numSpheres = sizeof(spheres)/sizeof(Sphere);
+Ray cam(Vec(50, 52, 295.6), Vec(0, -0.042612, -1).norm());
+Vec cx = Vec(WINDOW_WIDTH*.5135/WINDOW_HEIGHT);
+Vec cy = (cx%cam.dir).norm()*.5135;
+
+inline bool intersect(const Ray &r, double &t, int &id) {
+   double d, inf=t=1e20;
+   for (int i = numSpheres;i--;) {
+      if ((d = spheres[i].intersect(r)) && d < t) {
+         t = d; id = i;
+      }
+   }
+   return t < inf;
+}
+
+
 /* main render routine */
 void render() {
-   int j, i;
-   for (i = 0; i < WINDOW_HEIGHT; i++) {
-      for (j = 0; j < WINDOW_WIDTH; j++) {
-         glBuffer[i][j][0] = 0; // RED
-         glBuffer[i][j][1] = 0; // GREEN
-         glBuffer[i][j][2] = 0; // BLUE
+   int x, y;
+   for (y = 0; y < WINDOW_HEIGHT; y++) {
+      for (x = 0; x < WINDOW_WIDTH; x++) {
+         Vec d = cx*(((0 + .5 + 0)/2 + x)/WINDOW_WIDTH - .5) +
+                 cy*(((0 + .5 + 0)/2 + y)/WINDOW_HEIGHT - .5) + cam.dir;
+         Ray r = Ray(cam.origin + d*140, d.norm());
+         double t;
+         int id = 0;
+         if (!intersect(r, t, id)) {
+            glBuffer[y][x][0] = 255; // RED
+            glBuffer[y][x][1] = 0; // GREEN
+            glBuffer[y][x][2] = 0; // BLUE
+         } else {
+            glBuffer[y][x][0] = toInt(spheres[id].col.x); 
+            glBuffer[y][x][1] = toInt(spheres[id].col.y); 
+            glBuffer[y][x][2] = toInt(spheres[id].col.z); 
+         }
       }
    }
 
