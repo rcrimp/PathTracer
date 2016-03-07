@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include <GL/glu.h>
@@ -15,7 +14,7 @@ void render();
 
 SDL_Window *window = NULL;
 SDL_GLContext glContext = NULL;
-GLubyte glBuffer[WINDOW_HEIGHT][WINDOW_WIDTH];
+GLubyte glBuffer[WINDOW_HEIGHT][WINDOW_WIDTH][3];
 bool quit = false;
 
 int main() {
@@ -70,15 +69,17 @@ void input() {
 
 /* main render routine */
 void render() {
-   int col, row;
-   for (row = 0; row < WINDOW_HEIGHT; row++) {
-      for (col = 0; col < WINDOW_WIDTH; col++) {
-         glBuffer[row][col] = 0;
+   int j, i;
+   for (i = 0; i < WINDOW_HEIGHT; i++) {
+      for (j = 0; j < WINDOW_WIDTH; j++) {
+         glBuffer[i][j][0] = 0; // RED
+         glBuffer[i][j][1] = 0; // GREEN
+         glBuffer[i][j][2] = 0; // BLUE
       }
    }
 
    /* refresh window buffer */
    glClear(GL_COLOR_BUFFER_BIT);
-   glDrawPixels(WINDOW_WIDTH, WINDOW_HEIGHT, GL_LUMINANCE, GL_UNSIGNED_BYTE, glBuffer);
+   glDrawPixels(WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, glBuffer);
    SDL_GL_SwapWindow(window);
 }
