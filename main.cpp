@@ -70,6 +70,7 @@ void input() {
 
 /* scene data */
 Sphere spheres[] = {
+   Sphere(1.5, Vec(50,81.6-16.5,81.6),Vec(4,4,4)*100,  Vec()),//Lite
    Sphere(1e5, Vec( 1e5+1,40.8,81.6), Vec(),Vec(.75,.25,.25)),//Left
    Sphere(1e5, Vec(-1e5+99,40.8,81.6),Vec(),Vec(.25,.25,.75)),//Rght
    Sphere(1e5, Vec(50,40.8, 1e5),     Vec(),Vec(.75,.75,.75)),//Back
@@ -78,7 +79,6 @@ Sphere spheres[] = {
    Sphere(1e5, Vec(50,-1e5+81.6,81.6),Vec(),Vec(.75,.75,.75)),//Top
    Sphere(16.5,Vec(27,16.5,47),       Vec(),Vec(1,1,1)*.999),//Mirr
    Sphere(16.5,Vec(73,16.5,78),       Vec(),Vec(1,1,1)*.999),//Glas
-   Sphere(1.5, Vec(50,81.6-16.5,81.6),Vec(4,4,4)*100,  Vec()),//Lite
 };
 int numSpheres = sizeof(spheres)/sizeof(Sphere);
 Ray cam(Vec(50, 52, 295.6), Vec(0, -0.042612, -1).norm());
@@ -123,7 +123,7 @@ void handleKey(SDL_Keycode k) {
 }
 
 inline bool intersect(const Ray &r, double &t, int &id) {
-   double d, inf=t=1e20;
+   double d, inf = t = 1e20;
    for (int i = numSpheres;i--;) {
       if ((d = spheres[i].intersect(r)) && d < t) {
          t = d; id = i;
@@ -133,25 +133,57 @@ inline bool intersect(const Ray &r, double &t, int &id) {
 }
 
 
+
+const Vec void_colour = Vec(1.0, 0.0, 1.0);
+inline void fill_pixel(GLubyte pixel[3], const Vec &col) {
+   pixel[0] = toInt(col.x); // RED
+   pixel[1] = toInt(col.y); // GREEN
+   pixel[2] = toInt(col.z); // BLUE
+
+}
+
 /* main render routine */
 void render() {
    int x, y;
    for (y = 0; y < WINDOW_HEIGHT; y++) {
       for (x = 0; x < WINDOW_WIDTH; x++) {
+
+         
+
          Vec d = cx*(((0 + .5 + 0)/2 + x)/WINDOW_WIDTH - .5) +
-                 cy*(((0 + .5 + 0)/2 + y)/WINDOW_HEIGHT - .5) + cam.dir;
+            cy*(((0 + .5 + 0)/2 + y)/WINDOW_HEIGHT - .5) + cam.dir;
          Ray r = Ray(cam.origin + d*140, d.norm());
          double t;
          int id = 0;
-         if (!intersect(r, t, id)) {
-            glBuffer[y][x][0] = 0; // RED
-            glBuffer[y][x][1] = 0; // GREEN
-            glBuffer[y][x][2] = 0; // BLUE
-         } else {
-            glBuffer[y][x][0] = toInt(spheres[id].col.x); 
-            glBuffer[y][x][1] = toInt(spheres[id].col.y); 
-            glBuffer[y][x][2] = toInt(spheres[id].col.z); 
+
+         Vec col = void_colour;
+         if (intersect(r, t, id)) {
+            col = spheres[id].col;
+
+            Sphere light = spheres[0];
+
+            Vec hit = r.origin + r.dir * t;
+            Vec n = (hit - spheres[id].pos).norm();
+            Vec l = (light.pos - hit).norm();
+            double lambert = clamp(n.dot(l));
+
+
+            //shadow ray
+            Ray shadow = Ray(hit, (light.pos - hit).norm());
+            if (intersect(shadow, t, id)) {
+               if (0 == id) { // if we hit light
+                  col.x *= lambert;
+                  col.y *= lambert;
+                  col.z *= lambert;
+               } else {
+                  col.x = 0;
+                  col.y = 0;
+                  col.z = 0;
+               } 
+            }
          }
+
+         fill_pixel(glBuffer[y][x], col);
       }
    }
 
