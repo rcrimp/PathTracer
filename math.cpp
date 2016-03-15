@@ -58,14 +58,22 @@ struct Ray {
       }
 };
 
+struct Material {
+   Vec col, emi;
+   double diff, refl, trans;
+
+   Material(Vec col_, Vec emi_, double diff_, double refl_, double trans_) :
+      col(col_), emi(emi_), diff(diff_), refl(refl_), trans(trans_) {
+   
+   }
+};
+
 struct Sphere {
    double rad;
-   Vec pos, col, emission;
-   Sphere(double rad_, Vec p_, Vec e_, Vec c_) :
-      rad(rad_),
-      pos(p_),
-      col(c_),
-      emission(e_) {
+   Vec pos;
+   Material mat;
+   Sphere(double rad_, Vec p_, Material mat_) :
+      rad(rad_), pos(p_), mat(mat_) {
 
       }
    double intersect(const Ray &r) const {
