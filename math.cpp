@@ -1,5 +1,8 @@
 /* stolen from smallpt.cpp
  * replace with a clean math class */
+#include <Dense>
+
+using namespace Eigen;
 
 inline double clamp(double x) {
    return x < 0 ? 0 ? x > 1 : 1 : x;
@@ -10,48 +13,15 @@ inline int toInt(double x) {
    return int(clamp(x)*255);
 }
 
-/* Point, Vector, Color */
-struct Vec {
-   double x, y, z; // r, g, b
-
-   Vec(double x_ = 0, double y_ = 0, double z_ = 0) {
-      x = x_;
-      y = y_;
-      z = z_;
-   }
-
-   Vec operator+(const Vec &b) const {
-      return Vec(x + b.x, y + b.y, z + b.z);
-   } 
-
-   Vec operator-(const Vec &b) const {
-      return Vec(x - b.x, y - b.y, z - b.z);
-   } 
-
-   Vec operator*(double b) const {
-      return Vec(x * b, y * b, z * b);
-   } 
-
-   Vec mult(const Vec &b) const {
-      return Vec(x * b.x, y * b.y, z * b.z);
-   }
-
-   Vec& norm() {
-      return *this = *this * (1/sqrt(x*x + y*y + z*z));
-   }
-
-   double dot(const Vec &b) const {
-      return x*b.x + y*b.y + z*b.z;
-   }
-
-   Vec operator%(Vec &b) { // CROSS
-      return Vec(y*b.z - z*b.y, z*b.x - x*b.z, x*b.y - y*b.x);
-   }
-};
-
 struct Ray {
-   Vec origin, dir;
-   Ray(Vec o_, Vec d_) :
+   Vector3d origin, dir;
+
+   Ray(){
+      origin = Vector3d(0, 0, 0);
+      dir = Vector3d(0, 0, 1);
+   }
+
+   Ray(Vector3d o_, Vector3d d_) :
       origin(o_),
       dir(d_) {
 
@@ -59,10 +29,10 @@ struct Ray {
 };
 
 struct Material {
-   Vec col, emi;
+   Vector3d col, emi;
    double diff, refl, trans;
 
-   Material(Vec col_, Vec emi_, double diff_, double refl_, double trans_) :
+   Material(Vector3d col_, Vector3d emi_, double diff_, double refl_, double trans_) :
       col(col_), emi(emi_), diff(diff_), refl(refl_), trans(trans_) {
    
    }
@@ -70,14 +40,14 @@ struct Material {
 
 struct Sphere {
    double rad;
-   Vec pos;
+   Vector3d pos;
    Material mat;
-   Sphere(double rad_, Vec p_, Material mat_) :
+   Sphere(double rad_, Vector3d p_, Material mat_) :
       rad(rad_), pos(p_), mat(mat_) {
 
       }
    double intersect(const Ray &r) const {
-      Vec op = pos - r.origin;
+      Vector3d op = pos - r.origin;
       double t;
       double eps = 1.0e-4;
       double b = op.dot(r.dir);
