@@ -4,7 +4,7 @@ cam_dir 0 0 -1
 new material
 name light
 color 1.0 1.0 1.0
-scatter 1.0 0.0 0.0 0.5
+scatter 1.0 0.0 0.0 1.0
 
 new material
 name white
@@ -37,19 +37,20 @@ color 1.0 1.0 1.0
 scatter 0.0 0.0 1.0 0.0
 
 new sphere
-position 60 64.5 81.6
-radius 1.5
+#position -30 34.5 81.6
+position 12 12.5 100.6
+radius 20
 material light
 
-new sphere
-position 50 64.5 81.6
-radius 1.5
-material light
-
-new sphere
-position 100 60.5 170
-radius 1.5
-material light
+#new sphere
+#position 50 64.5 81.6
+#radius 10
+#material light
+#
+#new sphere
+#position 100 60.5 170
+#radius 5
+#material light
 
 new sphere
 position 57 16.5 37

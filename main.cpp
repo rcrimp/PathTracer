@@ -156,6 +156,7 @@ void handleKey(SDL_Keycode k) {
                       break;
                    }
    }
+   std::cout << pos << std::endl;
 }
 
 inline Sphere* intersect(const Ray &r, double &t) {
@@ -173,7 +174,7 @@ inline Sphere* intersect(const Ray &r, double &t) {
    return id;
 }
 
-const Vector3d void_colour = Vector3d(1.0, 0.0, 1.0);
+const Vector3d void_colour = Vector3d(0.0, 0.0, 0.0);
 
 inline void fill_pixel(GLubyte pixel[3], const Vector3d &col) {
    pixel[0] = toInt(col(0));// < 1 ? col(0) : 1); // RED
@@ -181,82 +182,57 @@ inline void fill_pixel(GLubyte pixel[3], const Vector3d &col) {
    pixel[2] = toInt(col(2));// < 1 ? col(2) : 1); // BLUE
 }
 
+inline double unitRand() {
+   return (double) rand() / (RAND_MAX);
+}
+
+
 Vector3d trace(Ray r, int depth) {
    Vector3d col = void_colour;
 
+   if (depth == 0) {
+      return void_colour; 
+   }
+
    double t;
-   Sphere* id = NULL; //scene.spheres.back();
+   Sphere* id = NULL;
    if (NULL != (id = intersect(r, t))) {
       // hit information
       Vector3d hit = r.origin + r.dir * t;
-      fflush(stdout);
       Vector3d n = (hit - id->pos).normalized();
+
+      // material information
       Material mat = id->mat;
+      Vector3d col = mat.col;
 
-      Vector3d col_diff = mat.col;
-      Vector3d col_refr = Vector3d();
-      Vector3d col_trans = Vector3d();
+      double diff = mat.diff;
+      double emit = mat.emit;
 
-      // reflection ray
-      double refl_val = mat.refl;
-      if (depth > 0 && refl_val > 0.0) {
-         Vector3d refl_dir = r.dir - (n * (2 * r.dir.dot(n))); 
-         Ray refl_ray = Ray(hit, refl_dir);
-         col_refr = trace(refl_ray, depth - 1);
+      if (emit > 0.0) {
+         return emit * col;
       }
+      
+      // random ray direction
+      double theta0 = 2 * 3.1415926535 * unitRand();
+      double theta1 = acos(1 - 2 * unitRand());
+      Vector3d rand_dir = Vector3d(
+            sin(theta0) * sin(theta1),
+            sin(theta0) * cos(theta1),
+            sin(theta1)
+            );
 
-      // refractive ray
-      double refr_val = mat.trans;
-      if (depth > 0 && refr_val > 0) {
-         //   double test = 1 / n.dot(r.dir);
-         //   Vector3d trans_dir = r.dir + n * test;
-         //   trans_dir = trans_dir.normalized();
-
-         //     Vector3d c = (n % r.dir).norm();
-         //     double theta = atan(c.y / c.x);
-         //     double phi = acos(c.z);
-         Vector3d axis = n.cross(r.dir);
-         AngleAxisd t = AngleAxisd(0.1, axis); 
-         Vector3d trans_dir = t.toRotationMatrix() * r.dir;
-         Ray trans_ray = Ray(hit, trans_dir.normalized());
-         col_trans = trace(trans_ray, depth); 
+      Ray rand_ray = Ray(hit, rand_dir);
+      
+      double k = 0.5; // decay term
+      
+      Vector3d c = trace(rand_ray, depth - 1);
+      if (c(0) == 0 && c(1) == 0 && c(2) == 0){ // if black
+         return void_colour; 
+      } else {
+         return (diff * col) + (k *  c); 
       }
-
-      // illumination
-
-      // lambertian lighting
-      double d;
-      double lambert = 0.0;
-      for (Sphere &light : scene.spheres) {
-         if (light.mat.emit <= 0.0) continue; 
-
-         double t;
-         Sphere* id = NULL; //&light;
-         Vector3d l = (light.pos - hit).normalized();
-         if (NULL != (id = intersect(Ray(hit, l), t))) {
-            if (id == &light) {
-               lambert += light.mat.emit * n.dot(l);
-            } 
-         }
-      }
-      lambert = clamp(lambert);
-
-      //    }
-
-      // diffuse
-      //  Ray shadow = Ray(hit, l); 
-      //  if (intersect(shadow, t, id)) {
-      //     if (&id == &light) { // if we hit light
-      //        col_diff = col_diff * lambert;
-      //     } else {
-      //        col_diff = Vector3d(0, 0, 0);
-      //     } 
-      //  }
-      //(mat.col * mat.refl) +
-      //(mat.col * mat.trans); // * lambert * mat.diff + col_refr * mat.refl + col_trans * mat.trans;
-      col = (mat.col * mat.emit) + (mat.col * mat.diff * lambert);
-}
-      return col;
+   }
+   return col;
 }
 
 /* main render routine */
@@ -268,7 +244,13 @@ void render() {
          Vector3d d = cx*((.5 + x)/WINDOW_WIDTH - .5) +
             cy*((.5 + y)/WINDOW_HEIGHT - .5) + scene.cam.dir;
          Ray r = Ray(scene.cam.pos + d*140, d.normalized());
-         fill_pixel(glBuffer[y][x], trace(r, 5));
+
+         int samples = 20;
+         Vector3d col = Vector3d(0, 0, 0);
+         for (int i = 0; i < samples; i++){
+            col += 0.05 * trace(r, 10);
+         }
+         fill_pixel(glBuffer[y][x], col);
       }
    }
 
