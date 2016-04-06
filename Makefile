@@ -1,10 +1,9 @@
 CC = g++
-SRCS = main.cpp
+SRCS = main.cpp math.cpp
 OBJS = $(SRCS:.c=.o)
-TARGET = a.out
-CFLAGS = -I Eigen/
+TARGET = pt.out
+CFLAGS = -I Eigen/ -O3 -std=c++11 -g
 LFLAGS = -lSDL2 -lGL -lGLEW
-EXEC = pt.out
 
 $(TARGET) : $(OBJS)
-	$(CC) $(OBJS) $(CFLAGS) $(LFLAGS) -o $(EXEC)
+	$(CC) $(OBJS) $(CFLAGS) $(LFLAGS) -o $(TARGET)

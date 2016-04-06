@@ -1,0 +1,74 @@
+# this is a comment 
+# name "object name"
+# color "RGB base colour"
+# scatter diffuse reflect transmit
+# position x y z
+
+camera
+position 0.0 -9.0 3.0 
+direction 0 1 0
+
+new material
+name white
+color 1.0 1.0 1.0
+scatter 1.0 0.0 0.0
+
+new material
+name red 
+color 0.75 0.25 0.25
+scatter 1.0 0.0 0.0
+
+new material
+name green 
+color 0.25 0.75 0.25
+scatter 1.0 0.0 0.0
+
+new material
+name blue 
+color 0.25 0.25 0.75
+scatter 1.0 0.0 0.0
+
+new material
+name light
+color 1.0 1.0 1.0
+scatter 1.0 0.0 0.0
+
+new material
+name mirror
+color 1.0 1.0 1.0
+scatter 0.0 1.0 0.0
+
+new material
+name glass
+color 1.0 1.0 1.0
+scatter 0.0 0.0 1.0
+
+new sphere
+position 0 0 6
+radius 1
+material light
+
+object sphere
+position -2 1 5
+radius 1
+material red
+
+object sphere
+position 2 1 5
+radius 1
+material green
+
+object sphere
+position 0 -4 3
+radius 1
+material glass
+
+object sphere
+position -2 1 1
+radius 1
+material blue
+
+object sphere
+position 2 1 1
+radius 1
+material mirror
