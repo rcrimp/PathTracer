@@ -22,6 +22,7 @@ SDL_GLContext glContext = NULL;
 GLubyte glBuffer[WINDOW_HEIGHT][WINDOW_WIDTH][3];
 bool quit = false;
 
+int samples = 1;
 Scene scene = Scene();
 
 int main() {
@@ -36,7 +37,7 @@ int main() {
       //   getc(stdin);
 
       t2 = clock();
-      //fprintf(stderr, "%f seconds\n", (float)(t2-t1) / CLOCKS_PER_SEC);
+      fprintf(stderr, "%f seconds\n", (float)(t2-t1) / CLOCKS_PER_SEC);
       t1 = t2;
    } while (!quit);
 
@@ -86,35 +87,9 @@ inline double clamp(double x) {
 }
 
 inline int toInt(double x) {
-   // return int(pow(clamp(x), 1/2.2)*255+.5);
+   //return int(pow(clamp(x), 1/2.2)*255+.5);
    return int(clamp(x)*255);
 }
-
-//Material mat_white = Material("white", Vector3d(1, 1, 1), 1.0, 0.0, 0.0);
-//Material mat_red   = Material("red", Vector3d(.75, .25, .25), 1.0, 0.0, 0.0);
-//Material mat_blue  = Material("blue", Vector3d(.25, .25, .75), 1.0, 0.0, 0.0);
-//
-//Material mat_light = Material("light", Vector3d(1, 1, 1), 1.0, 0.0, 0.0);
-//Material mat_glass = Material("glass", Vector3d(1, 1, 1), 0.0, 0.0, 1.0);
-//Material mat_mirr = Material("mirror", Vector3d(1, 1, 1), 0.0, 1.0, 0.0);
-//
-///* scene data */
-//Sphere spheres[] = {
-//   Sphere(Vector3d(50,81.6-16.5,81.6), 1.5, mat_light),//Lite
-//   Sphere(Vector3d(1e5+1,40.8,81.6),   1e5, mat_red),//Left
-//   Sphere(Vector3d(-1e5+99,40.8,81.6), 1e5, mat_blue),//Rght
-//   Sphere(Vector3d(50,40.8, 1e5),      1e5, mat_white),//Back
-//   Sphere(Vector3d(50,40.8,-1e5+170),  1e5, mat_white), //Frnt
-//   Sphere(Vector3d(50, 1e5, 81.6),     1e5, mat_white),//Botm
-//   Sphere(Vector3d(50,-1e5+81.6,81.6), 1e5, mat_white),//Top
-//   Sphere(Vector3d(57,16.5,37),        16.5,mat_white),//Mirr
-//   Sphere(Vector3d(27,16.5,47),        16.5,mat_mirr), //Mirr
-//   Sphere(Vector3d(73,16.5,80),        16.5,mat_glass),//Glas
-//};
-//int numSpheres = sizeof(spheres)/sizeof(Sphere);
-//
-//Camera cam = Camera(Vector3d(50, 52, 295.6), Vector3d(0, -0.042612, -1).normalized(), 45.0);
-
 
 Vector3d cx = Vector3d(WINDOW_WIDTH*.5135/WINDOW_HEIGHT, 0, 0);
 Vector3d cy = cx.cross(scene.cam.dir).normalized() * 0.5135;
@@ -157,6 +132,7 @@ void handleKey(SDL_Keycode k) {
                    }
    }
    std::cout << pos << std::endl;
+   samples = 1;
 }
 
 inline Sphere* intersect(const Ray &r, double &t) {
@@ -174,7 +150,7 @@ inline Sphere* intersect(const Ray &r, double &t) {
    return id;
 }
 
-const Vector3d void_colour = Vector3d(0.0, 0.0, 0.0);
+const Vector3d void_colour = Vector3d(0, 0, 0);
 
 inline void fill_pixel(GLubyte pixel[3], const Vector3d &col) {
    pixel[0] = toInt(col(0));// < 1 ? col(0) : 1); // RED
@@ -182,18 +158,27 @@ inline void fill_pixel(GLubyte pixel[3], const Vector3d &col) {
    pixel[2] = toInt(col(2));// < 1 ? col(2) : 1); // BLUE
 }
 
+inline void add_pixel(GLubyte pixel[3], const Vector3d &col) {
+   double n = (double)1/samples;
+   double o = 1.0 - n;
+   pixel[0] = o * pixel[0] + toInt(n * col(0));// < 1 ? col(0) : 1); // RED
+   pixel[1] = o * pixel[1] + toInt(n * col(1));// < 1 ? col(1) : 1); // GREEN
+   pixel[2] = o * pixel[2] + toInt(n * col(2));// < 1 ? col(2) : 1); // BLUE
+}
+
 inline double unitRand() {
    return (double) rand() / (RAND_MAX);
 }
 
-
 Vector3d trace(Ray r, int depth) {
    Vector3d col = void_colour;
 
+   // base case
    if (depth == 0) {
       return void_colour; 
    }
 
+   // recursive case
    double t;
    Sphere* id = NULL;
    if (NULL != (id = intersect(r, t))) {
@@ -204,7 +189,6 @@ Vector3d trace(Ray r, int depth) {
       // material information
       Material mat = id->mat;
       Vector3d col = mat.col;
-
       double diff = mat.diff;
       double emit = mat.emit;
 
@@ -220,16 +204,21 @@ Vector3d trace(Ray r, int depth) {
             sin(theta0) * cos(theta1),
             sin(theta1)
             );
+      if (n.dot(rand_dir) < 0) {
+         rand_dir *= -1;
+      }
 
       Ray rand_ray = Ray(hit, rand_dir);
       
-      double k = 0.5; // decay term
+      double k1 = 0.3;
+      double k2 = 1 - k1;
       
       Vector3d c = trace(rand_ray, depth - 1);
-      if (c(0) == 0 && c(1) == 0 && c(2) == 0){ // if black
-         return void_colour; 
-      } else {
-         return (diff * col) + (k *  c); 
+      // if the recursive ray DOESN'T hits a light
+      if (c == void_colour){
+         return Vector3d(0, 0, 0); 
+      } else { // else we never hit a light
+         return (k2 * diff * col) + (k1 *  c); 
       }
    }
    return col;
@@ -245,14 +234,15 @@ void render() {
             cy*((.5 + y)/WINDOW_HEIGHT - .5) + scene.cam.dir;
          Ray r = Ray(scene.cam.pos + d*140, d.normalized());
 
-         int samples = 20;
-         Vector3d col = Vector3d(0, 0, 0);
-         for (int i = 0; i < samples; i++){
-            col += 0.05 * trace(r, 10);
-         }
-         fill_pixel(glBuffer[y][x], col);
+         Vector3d col = trace(r, 5);
+         add_pixel(glBuffer[y][x], col);
+         //fill_pixel(glBuffer[y][x], col);
       }
    }
+   // finished one frame
+   samples++;
+   std::cout << "samples: " << samples << std::endl;
+   fflush(stdout);
 
    /* refresh window buffer */
    glClear(GL_COLOR_BUFFER_BIT);
