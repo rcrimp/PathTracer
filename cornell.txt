@@ -7,6 +7,11 @@ color 1.0 1.0 1.0
 scatter 1.0 0.0 0.0 1.0
 
 new material
+name yellow 
+color 0.75 0.75 0
+scatter 1.0 0.0 0.0 0.0 
+
+new material
 name white
 color 1.0 1.0 1.0
 scatter 1.0 0.0 0.0 0.0
@@ -28,7 +33,7 @@ scatter 1.0 0.0 0.0 0.0
 
 new material
 name mirror
-color 1.0 1.0 1.0
+color 0.0 0.0 0.0
 scatter 0.0 1.0 0.0 0.0
 
 new material
@@ -38,76 +43,67 @@ scatter 0.0 0.0 1.0 0.0
 
 new sphere
 #position -30 34.5 81.6
-position 12 12.5 100.6
-radius 15 
+position 12 82.5 100.6
+radius 16
 material light
 
-#sky
-new sphere
-position 50 52 295.5
-radius 500
-material blue 
+#new sphere
+#position 50 52 295.5
+#radius 500
+#material light
 
 #new sphere
-#position 50 64.5 81.6
-#radius 10
-#material light
-#
-#new sphere
-#position 100 60.5 170
-#radius 5
+#position 75 30.5 150
+#radius 2
 #material light
 
 new sphere
 position 57 16.5 37
 radius 16.5
-material blue 
+material mirror 
 
 new sphere
 position 26 16.5 47
 radius 16.5
-material red 
+material blue 
 
 new sphere
-position 74 16.5 80
+position 94 16.5 80
 radius 16.5
-material green 
+material red 
 
-## back 
-#new sphere
-#position 50 40.8 -100000
-#radius 100000
-#material white 
-#
+# back 
+new sphere
+position 50 40.8 -100000
+radius 100000
+material white 
+
 # floor
 new sphere
 position 50 -100000 81.6
 radius 100000
-material white
+material mirror 
 
-##left
-#new sphere
-#position -100040 40.8 81.6
-#radius 100000
-#material red
-#
-## right
-#new sphere
-#position 100140 40.8 81.6
-#radius 100000
-#material green
-#
-## top
-#new sphere
-#position 50 100100 81.6
-#radius 100000
-#material white
-#
-## front 
-#new sphere
-#position 50 40.8 100170
-#radius 100000
-#material blue 
+#left
+new sphere
+position -100040 40.8 81.6
+radius 100000
+material red 
 
-# spheres[7] = Sphere(Vector3d(50,40.8,-1e5+170),  1e5, mats[0]); //Frnt
-# spheres[9] = Sphere(Vector3d(50,-1e5+81.6,81.6), 1e5, mats[0]);//Top
+# right
+new sphere
+position 100140 40.8 81.6
+radius 100000
+material green
+
+# top
+new sphere
+position 50 100100 81.6
+radius 100000
+material white 
+
+# front 
+new sphere
+position 50 40.8 100170
+radius 100000
+material white 
